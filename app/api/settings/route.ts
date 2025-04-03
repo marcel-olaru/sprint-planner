@@ -2,6 +2,10 @@ import { type NextRequest, NextResponse } from "next/server"
 import { getSettings, saveSettings } from "@/lib/csv-storage"
 import { getSettingsClient, saveSettingsClient } from "@/app/fallback-storage"
 
+// Add these two lines for static export compatibility
+export const dynamic = "force-static";
+export const revalidate = false;
+
 // Determine if we're running on GitHub Pages (static export)
 const isStaticExport = process.env.NEXT_PUBLIC_GITHUB_PAGES === "true"
 
