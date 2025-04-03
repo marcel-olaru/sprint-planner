@@ -21,6 +21,12 @@ const nextConfig = {
     parallelServerBuildTraces: true,
     parallelServerCompiles: true,
   },
+  // Added for GitHub Pages deployment
+  output: 'export',
+  // If you're deploying to a subdirectory (like GitHub Pages for a project repo)
+  basePath: '/sprint-planner',
+  // Make sure links and assets work with GitHub Pages
+  assetPrefix: '/sprint-planner',
 }
 
 if (userConfig) {
