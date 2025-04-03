@@ -27,6 +27,9 @@ const nextConfig = {
   basePath: '/sprint-planner',
   // Make sure links and assets work with GitHub Pages
   assetPrefix: '/sprint-planner',
+  // Handle API routes with static export
+  distDir: process.env.NODE_ENV === 'production' ? '.next' : '.next',
+  trailingSlash: true,
 }
 
 if (userConfig) {
