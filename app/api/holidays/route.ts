@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server"
 import { getPublicHolidaysForCountry, countPublicHolidaysInSprint } from "@/lib/mock-data"
 
+// Add these lines for static export compatibility
+export const dynamic = "force-static";
+export const revalidate = false;
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
