@@ -1,10 +1,3 @@
-/**
- * JIRA API integration
- *
- * This module handles connecting to and interacting with JIRA
- */
-
-// Function to authenticate with JIRA API
 export async function authenticateJira(jiraUrl: string, email: string, apiToken: string) {
   // In a real implementation, this would authenticate with JIRA
   console.log("Authenticating with JIRA API", { jiraUrl, email })

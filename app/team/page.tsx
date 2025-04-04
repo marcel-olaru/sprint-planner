@@ -1,5 +1,7 @@
 "use client"
 
+import { Switch } from "@/components/ui/switch"
+
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -18,16 +20,18 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/components/ui/use-toast"
 import { Trash2, UserPlus, Users, Edit, BarChart3, Calendar } from "lucide-react"
-import type { TeamMember } from "@/lib/csv-storage"
+import type { TeamMember } from "@/lib/types"
 
 export default function TeamPage() {
   const { toast } = useToast()
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([])
   const [newMember, setNewMember] = useState<TeamMember>({
     name: "",
-    role: "Developer",
+    role: "SDET",
     capacity: 1.0,
     daysOff: 0,
+    active: true,
+    country: "France",
   })
   const [editingMember, setEditingMember] = useState<TeamMember | null>(null)
   const [editIndex, setEditIndex] = useState<number | null>(null)
@@ -91,9 +95,11 @@ export default function TeamPage() {
 
       setNewMember({
         name: "",
-        role: "Developer",
+        role: "SDET",
         capacity: 1.0,
         daysOff: 0,
+        active: true,
+        country: "France",
       })
       setDialogOpen(false)
 
@@ -218,6 +224,19 @@ export default function TeamPage() {
     }
   }
 
+  const getCountryEmoji = (country: string) => {
+    switch (country) {
+      case "France":
+        return "🇫🇷"
+      case "Spain":
+        return "🇪🇸"
+      case "Germany":
+        return "🇩🇪"
+      default:
+        return "🌍"
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
@@ -269,7 +288,7 @@ export default function TeamPage() {
         </div>
       </header>
 
-      <main className="container py-8 px-4 md:px-6 lg:px-8">
+      <main className="container py-8">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Team Management</h1>
@@ -320,6 +339,27 @@ export default function TeamPage() {
                       <SelectItem value="Designer">Designer</SelectItem>
                       <SelectItem value="Product Manager">Product Manager</SelectItem>
                       <SelectItem value="Scrum Master">Scrum Master</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="country" className="text-slate-700 dark:text-slate-300">
+                    Country
+                  </Label>
+                  <Select
+                    value={newMember.country}
+                    onValueChange={(value) => setNewMember({ ...newMember, country: value })}
+                  >
+                    <SelectTrigger
+                      id="country"
+                      className="border-slate-300 dark:border-slate-700 focus:border-purple-500 dark:focus:border-purple-500"
+                    >
+                      <SelectValue placeholder="Select country" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="France">🇫🇷 France</SelectItem>
+                      <SelectItem value="Spain">🇪🇸 Spain</SelectItem>
+                      <SelectItem value="Germany">🇩🇪 Germany</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -383,8 +423,10 @@ export default function TeamPage() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-slate-200 dark:border-slate-700">
+                      <th className="text-left font-medium p-3 text-slate-600 dark:text-slate-400">Active</th>
                       <th className="text-left font-medium p-3 text-slate-600 dark:text-slate-400">Name</th>
                       <th className="text-center font-medium p-3 text-slate-600 dark:text-slate-400">Role</th>
+                      <th className="text-center font-medium p-3 text-slate-600 dark:text-slate-400">Country</th>
                       <th className="text-center font-medium p-3 text-slate-600 dark:text-slate-400">Capacity</th>
                       <th className="text-center font-medium p-3 text-slate-600 dark:text-slate-400">Days Off</th>
                       <th className="text-right font-medium p-3 text-slate-600 dark:text-slate-400">Actions</th>
@@ -394,12 +436,39 @@ export default function TeamPage() {
                     {teamMembers.map((member, index) => (
                       <tr
                         key={index}
-                        className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+                        className={`border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors ${!member.active ? "opacity-60" : ""}`}
                       >
+                        <td className="p-3">
+                          <div className="flex items-center">
+                            <Switch
+                              checked={member.active}
+                              onCheckedChange={(checked) => {
+                                const updatedMember = { ...member, active: checked }
+                                fetch("/api/team", {
+                                  method: "PUT",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({ index, teamMember: updatedMember }),
+                                }).then((response) => {
+                                  if (response.ok) {
+                                    const updatedMembers = [...teamMembers]
+                                    updatedMembers[index].active = checked
+                                    setTeamMembers(updatedMembers)
+                                  }
+                                })
+                              }}
+                              className="data-[state=checked]:bg-purple-600"
+                            />
+                          </div>
+                        </td>
                         <td className="p-3 text-slate-900 dark:text-slate-200 font-medium">{member.name}</td>
                         <td className="text-center p-3">
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleColor(member.role)}`}>
                             {member.role}
+                          </span>
+                        </td>
+                        <td className="text-center p-3">
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800">
+                            {getCountryEmoji(member.country)} {member.country}
                           </span>
                         </td>
                         <td className="text-center p-3">
@@ -505,6 +574,27 @@ export default function TeamPage() {
                       <SelectItem value="Designer">Designer</SelectItem>
                       <SelectItem value="Product Manager">Product Manager</SelectItem>
                       <SelectItem value="Scrum Master">Scrum Master</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-country" className="text-slate-700 dark:text-slate-300">
+                    Country
+                  </Label>
+                  <Select
+                    value={editingMember.country}
+                    onValueChange={(value) => setEditingMember({ ...editingMember, country: value })}
+                  >
+                    <SelectTrigger
+                      id="edit-country"
+                      className="border-slate-300 dark:border-slate-700 focus:border-purple-500 dark:focus:border-purple-500"
+                    >
+                      <SelectValue placeholder="Select country" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="France">🇫🇷 France</SelectItem>
+                      <SelectItem value="Spain">🇪🇸 Spain</SelectItem>
+                      <SelectItem value="Germany">🇩🇪 Germany</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

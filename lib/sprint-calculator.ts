@@ -1,35 +1,57 @@
-/**
- * Sprint Calculator
- *
- * This module handles the calculation of sprint points based on team capacity and velocity
- */
-
-import type { TeamMember, SprintHistory } from "./csv-storage"
-
-interface CalculationOptions {
-  velocityPeriods: number
-  workingDaysPerSprint: number
-  roundToFibonacci: boolean
-}
+import type { TeamMember, SprintHistory, Settings } from "./types"
 
 // Calculate the team's capacity for the upcoming sprint
-export function calculateTeamCapacity(teamMembers: TeamMember[], workingDaysPerSprint: number): number {
-  // If no team members, return 100% capacity
-  if (teamMembers.length === 0) return 100
+export function calculateTeamCapacity(
+  teamMembers: TeamMember[],
+  workingDaysPerSprint: number,
+  publicHolidays = 0,
+): number {
+  // Filter active team members only
+  const activeMembers = teamMembers.filter((member) => member.active)
+
+  // If no active team members, return 0% capacity
+  if (activeMembers.length === 0) return 0
 
   // Calculate total possible person-days
-  const totalPossibleDays = teamMembers.reduce((total, member) => {
-    return total + workingDaysPerSprint * member.capacity
+  const totalPossibleDays = activeMembers.reduce((total, member) => {
+    return total + (workingDaysPerSprint - publicHolidays) * member.capacity
   }, 0)
 
   // Calculate actual available person-days
-  const availableDays = teamMembers.reduce((total, member) => {
-    const memberAvailableDays = (workingDaysPerSprint - member.daysOff) * member.capacity
+  const availableDays = activeMembers.reduce((total, member) => {
+    const memberAvailableDays = (workingDaysPerSprint - publicHolidays - member.daysOff) * member.capacity
     return total + Math.max(0, memberAvailableDays)
   }, 0)
 
   // Return capacity as a percentage
   return (availableDays / totalPossibleDays) * 100
+}
+
+// Calculate total sprint man-days for the team
+export function calculateTotalSprintManDays(
+  teamMembers: TeamMember[],
+  workingDaysPerSprint: number,
+  publicHolidays = 0,
+): number {
+  // Filter active team members only
+  const activeMembers = teamMembers.filter((member) => member.active)
+
+  // Calculate total available man-days
+  return activeMembers.reduce((total, member) => {
+    const availableDays = (workingDaysPerSprint - publicHolidays - member.daysOff) * member.capacity
+    return total + Math.max(0, availableDays)
+  }, 0)
+}
+
+// Calculate sprint velocity (points per man-day)
+export function calculateSprintVelocity(actualPoints: number, totalManDays: number): number {
+  if (totalManDays === 0 || actualPoints === 0) return 0
+  return actualPoints / totalManDays
+}
+
+// Calculate expected points based on velocity and available man-days
+export function calculateExpectedPoints(velocity: number, totalManDays: number): number {
+  return Math.round(velocity * totalManDays)
 }
 
 // Calculate the average velocity from previous sprints
@@ -68,7 +90,7 @@ export function roundToFibonacci(points: number): number {
 export function calculateRecommendedPoints(
   sprintHistory: SprintHistory[],
   teamCapacity: number,
-  options: CalculationOptions,
+  options: Settings,
 ): number {
   // Calculate average velocity from previous sprints
   const averageVelocity = calculateAverageVelocity(sprintHistory, options.velocityPeriods)

@@ -1,10 +1,3 @@
-/**
- * Fallback storage for GitHub Pages deployment
- *
- * This module provides localStorage-based storage when deployed to GitHub Pages,
- * which doesn't support server-side file operations
- */
-
 import type { TeamMember, SprintHistory } from "@/lib/csv-storage"
 
 // Check if we're running on the client side

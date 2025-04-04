@@ -55,14 +55,24 @@ export default function SettingsPage() {
     })
   }
 
-  const handleImportData = (event) => {
-    const file = event.target.files[0]
+  const handleImportData = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
     if (!file) return
 
     const reader = new FileReader()
     reader.onload = (e) => {
       try {
-        const data = JSON.parse(e.target.result)
+        if (!e.target) {
+          throw new Error("Event target is null");
+        }
+        const target = e.target as FileReader;
+        const result = target.result as string;
+        
+        if (typeof result !== 'string') {
+          throw new Error("File content is not text");
+        }
+      
+        const data = JSON.parse(result)
 
         // Validate the imported data
         if (data.teamMembers && Array.isArray(data.teamMembers)) {

@@ -1,10 +1,3 @@
-/**
- * Google Sheets API integration
- *
- * This module handles connecting to and fetching data from Google Sheets
- */
-
-// Function to authenticate with Google Sheets API
 export async function authenticateGoogleSheets(credentials: any) {
   // In a real implementation, this would use the Google API client library
   // to authenticate with the provided credentials

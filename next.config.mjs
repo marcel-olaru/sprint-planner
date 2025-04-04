@@ -4,6 +4,8 @@ try {
 } catch (e) {
   // ignore error
 }
+// Check if we're building for GitHub Pages
+const isGitHubPages = process.env.NEXT_PUBLIC_GITHUB_PAGES === "true";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -22,14 +24,15 @@ const nextConfig = {
     parallelServerCompiles: true,
   },
   // Added for GitHub Pages deployment
-  output: 'export',
-  // If you're deploying to a subdirectory (like GitHub Pages for a project repo)
-  basePath: '/sprint-planner',
-  // Make sure links and assets work with GitHub Pages
-  assetPrefix: '/sprint-planner/',
-  // Handle API routes with static export
-  distDir: process.env.NODE_ENV === 'production' ? '.next' : '.next',
-  trailingSlash: true,
+  output: isGitHubPages ? 'export' : undefined,
+  // Only apply these settings when building for GitHub Pages
+  ...(isGitHubPages ? {
+    basePath: '/sprint-planner',
+    assetPrefix: '/sprint-planner/',
+    // Handle API routes with static export
+    distDir: process.env.NODE_ENV === 'production' ? '.next' : '.next',
+    trailingSlash: true,
+  } : {})
 }
 
 if (userConfig) {

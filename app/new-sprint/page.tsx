@@ -86,6 +86,7 @@ export default function NewSprintPage() {
         velocityPeriods: 3,
         workingDaysPerSprint: 10,
         roundToFibonacci: true,
+        selectedCountry: "France",
       })
 
       setNewSprint((prev) => ({ ...prev, planned: recommendedPoints }))
